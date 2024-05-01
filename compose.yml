@@ -8,9 +8,9 @@ services:
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: sonar
     volumes:
-      - ./data:/opt/sonarqube/data
-      - ./extensions:/opt/sonarqube/extensions
-      - ./logs:/opt/sonarqube/logs
+      - ./sonarqube/data:/opt/sonarqube/data
+      - ./sonarqube/extensions:/opt/sonarqube/extensions
+      - ./sonarqube/logs:/opt/sonarqube/logs
     ports:
       - "9000:9000"
   sonarqube_db:
