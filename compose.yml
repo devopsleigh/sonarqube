@@ -13,7 +13,7 @@ services:
       - ./logs:/opt/sonarqube/logs
     ports:
       - "9000:9000"
-  db:
+  sonarqube_db:
     image: postgres:12
     environment:
       POSTGRES_USER: sonar
