@@ -8,9 +8,9 @@ services:
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: sonar
     volumes:
-      - sonarqube_data:/opt/sonarqube/data
-      - sonarqube_extensions:/opt/sonarqube/extensions
-      - sonarqube_logs:/opt/sonarqube/logs
+      - ./data:/opt/sonarqube/data
+      - ./extensions:/opt/sonarqube/extensions
+      - ./logs:/opt/sonarqube/logs
     ports:
       - "9000:9000"
   db:
@@ -19,12 +19,5 @@ services:
       POSTGRES_USER: sonar
       POSTGRES_PASSWORD: sonar
     volumes:
-      - postgresql:/var/lib/postgresql
-      - postgresql_data:/var/lib/postgresql/data
-
-volumes:
-  sonarqube_data: ./sonarqube/data
-  sonarqube_extensions: ./sonarqube/extensions
-  sonarqube_logs: ./sonarqube/logs
-  postgresql: ./db
-  postgresql_data: ./db/data
+      - ./db:/var/lib/postgresql
+      - ./db/data:/var/lib/postgresql/data
