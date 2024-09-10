@@ -2,24 +2,65 @@ services:
 
   sonarqube:
     image: sonarqube:community
+    container_name: ${SERVICE_NAME}
     depends_on:
-      - sonarqube_db
+      sonarqube_db:
+        condition: service_healthy
     environment:
-      SONAR_JDBC_URL: jdbc:postgresql://sonarqube_db:5432/sonar
+      SONAR_JDBC_URL: jdbc:postgresql://${SERVICE_NAME}_db:5432/sonar
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: ${DB_PASSWORD}
     volumes:
       - ./sonarqube/data:/opt/sonarqube/data
       - ./sonarqube/extensions:/opt/sonarqube/extensions
       - ./sonarqube/logs:/opt/sonarqube/logs
-    ports:
-      - "9000:9000"
+#    ports:
+#      - "9000:9000"
+    dns:
+      - ${DNS_SERVER}
+    networks:
+      - default
+      - proxy
+      - external
+    labels:
+      - "homepage.name=Sonarqube"
+      - "homepage.description=Static code analysis and quality scanning"
+      - "homepage.icon=si-sonarqube"
+      - "homepage.href=https://${SERVICE_NAME}.${MY_DOMAIN}"
+      - "homepage.group=Dev & Automation"
+      - "traefik.enable=true"
+      - "traefik.http.routers.${SERVICE_NAME}.entrypoints=http"
+      - "traefik.http.routers.${SERVICE_NAME}.rule=Host(`${SERVICE_NAME}.${MY_DOMAIN}`)"
+      - "traefik.http.routers.${SERVICE_NAME}.middlewares=default-whitelist@file"
+      - "traefik.http.middlewares.${SERVICE_NAME}-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.${SERVICE_NAME}.middlewares=${SERVICE_NAME}-https-redirect"
+      - "traefik.http.routers.${SERVICE_NAME}-secure.entrypoints=https"
+      - "traefik.http.routers.${SERVICE_NAME}-secure.rule=Host(`${SERVICE_NAME}.${MY_DOMAIN}`)"
+      - "traefik.http.routers.${SERVICE_NAME}-secure.tls=true"
+      - "traefik.http.routers.${SERVICE_NAME}-secure.service=${SERVICE_NAME}"
+      - "traefik.http.services.${SERVICE_NAME}.loadbalancer.server.port=${SERVICE_INTERNAL_PORT}"
+      - "traefik.docker.network=proxy"
 
   sonarqube_db:
     image: postgres:12
+    container_name: ${SERVICE_NAME}_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
     environment:
+      POSTGRES_DB: sonar
       POSTGRES_USER: sonar
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - ./db:/var/lib/postgresql
       - ./db/data:/var/lib/postgresql/data
+    networks:
+      - default
+
+networks:
+  proxy:
+    external: true
+  external:
+    external: true
